@@ -12,6 +12,7 @@ import javafx.scene.paint.Color;
 
         //Draw neuroNode
         private Color col;
+    protected double signal;
 
     public double getxPos() {
         return xPos;
@@ -21,6 +22,7 @@ import javafx.scene.paint.Color;
         return yPos;
     }
 
+    public double getSignal() { return signal;}
     private double xPos;
         private double yPos;
 
@@ -41,17 +43,29 @@ import javafx.scene.paint.Color;
             this.col = Color.rgb(r, g, b);
         }
 
-        public int getRed() {
-            return (int)(this.col.getRed() * 255.0D);
-        }
+    public void setSignal(int inputValue){ this.signal = inputValue; }
 
-        public int getGreen() {
-            return (int)(this.col.getGreen() * 255.0D);
-        }
+    public void calculateSignal(Synapse[] synapses) {
+        double output = 0.0D;
 
-        public int getBlue() {
-            return (int)(this.col.getBlue() * 255.0D);
+        for(int i = 0; i < synapses.length; ++i) {
+
+            if (synapses[i].getDestination().equals(this))
+                output += synapses[i].getSource().getSignal() * synapses[i].getWeight();
+
+
         }
+        this.signal = sigmoid(output);
+    }
+    private double sigmoid(double x){return  2/(1+Math.exp(-4.9*x))-1;}
+
+    public boolean equals(Point p){
+        if(this.xPos == p.getxPos() && this.yPos == p.getyPos())
+            return true;
+        return false;
+    }
+
+
 
 
 }

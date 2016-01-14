@@ -1,5 +1,7 @@
 package general;
 
+import com.sun.deploy.panel.TextFieldProperty;
+import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;

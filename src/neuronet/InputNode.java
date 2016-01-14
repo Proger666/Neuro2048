@@ -13,6 +13,7 @@ public class InputNode extends Point {
 
     public InputNode(double x, double y, Color c) {
         super(x, y, c);
+
     }
 
     // Reserved for future Use

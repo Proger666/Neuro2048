@@ -6,22 +6,11 @@ import general.Main;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -33,9 +22,12 @@ public class Neuronet {
     //Constants
     public static final int INPUTS_COUNT = 16;
     public static final int OUTPUTS_COUNT = 4;
+    private static final double SCORE_WEIGHT = 0.4;
+    private static final double MAX_TILE_WEIGHT = 0.6;
     public static int HIDDEN_COUNT;
     public static int POP_SIZE;
     public static float TICK_RATE;
+    public static String action = null;
 
 
 
@@ -61,25 +53,40 @@ public class Neuronet {
 
 
     public void runSimulation(Game2048 game2048) {
-           this.game2048 = game2048;
-            this.drawStart();
-           this.creatureList = new Creature[this.POP_SIZE];
+        this.game2048 = game2048;
+        this.drawStart();
+        this.creatureList = new Creature[this.POP_SIZE];
 
-           for(int fiveSecondsWonder = 0; fiveSecondsWonder < this.creatureList.length; ++fiveSecondsWonder) {
-               this.creatureList[fiveSecondsWonder] = new Creature();
-               this.creatureList[fiveSecondsWonder].calculateFitness(game2048.getScore(), bestScore);
-           }
+           for(int fiveSecondsWonder = 0; fiveSecondsWonder < this.creatureList.length; fiveSecondsWonder++) {
+               this.creatureList[fiveSecondsWonder] = new Creature(game2048);
+               try {
+                   Neuronet.this.creatureList[Neuronet.this.currentCreature].
+                           makeAction(Neuronet.this.creatureList[Neuronet.this.currentCreature].calculateMove());
+               } catch (IOException e) {
+                   System.out.println("Action wasn't calculated");
+               }
+               Neuronet.this.calculateFitness(game2048.getScore(), Neuronet.this.creatureList[currentCreature].getMaxTile());
+               }
+
+
 
            this.calculateAverageFitness();
            this.averageFitLevels.add(Double.valueOf(this.averageFitness));
+        this.creatureList[currentCreature].draw(controller);
 
            //timeline for graphics
            Timeline fiveSecondsWonder  = new Timeline(
                    new KeyFrame(Duration.seconds(this.TICK_RATE), event -> {
                        Neuronet.this.drawStart();
                        Neuronet.this.currentCreature = Neuronet.this.randomReproduce();
-                       Neuronet.this.creatureList[Neuronet.this.currentCreature].calculateFitness(game2048.getScore(), bestScore);
-                       Neuronet.this.creatureList[Neuronet.this.currentCreature].draw(controller);
+                       try {
+                           Neuronet.this.creatureList[Neuronet.this.currentCreature].
+                                   makeAction(Neuronet.this.creatureList[Neuronet.this.currentCreature].calculateMove());
+                       } catch (IOException e) {
+                           System.out.println("Action wasn't calculated");
+                       }
+                       Neuronet.this.calculateFitness(Neuronet.this.game2048.getScore(), Neuronet.this.creatureList[currentCreature].getMaxTile());
+                       Neuronet.this.creatureList[Neuronet.this.currentCreature].draw(Neuronet.this.controller);
                        Neuronet.this.fitLevels.add(Neuronet.this.creatureList[Neuronet.this.currentCreature].getFitness());
                        Neuronet.this.reproductionCount++;
                        Neuronet.this.calculateAverageFitness();
@@ -89,18 +96,29 @@ public class Neuronet {
                        if (Neuronet.this.reproductionCount % Neuronet.this.creatureList.length == 0) {
                            Neuronet.this.generationCount++;
                        }
-                       Neuronet.this.creatureList[Neuronet.this.currentCreature].draw(controller);
+                       Neuronet.this.creatureList[Neuronet.this.currentCreature].draw(Neuronet.this.controller);
                        Neuronet.this.updateLabels();
                    }, new KeyValue[0]));
         fiveSecondsWonder.setCycleCount(-1);
         fiveSecondsWonder.play();
         }
 
+    private void calculateFitness(int score, int maxTile) {
+        if(score > bestScore)
+            bestScore = score;
+        double fit = score * SCORE_WEIGHT + maxTile * MAX_TILE_WEIGHT;
+        this.creatureList[currentCreature].setFitness(fit);
+    }
+
     private void updateLabels() {
         controller.updateAvgPopFittLabel(averageFitness);
         controller.updateNewCreatureLabel(currentCreature);
         controller.updateChildOfLabel("Child of: " + parent1 + " and " + parent2);
-        controller.updateFitnessLabel(creatureList[currentCreature].getFitness());
+        if(currentCreature == 0){
+            controller.updateFitnessLabel(0.0D);
+        }else {
+            controller.updateFitnessLabel(creatureList[currentCreature].getFitness());
+        }
         controller.updateGenNumLabel(generationCount);
         controller.updateTotalMutLabel(mutations);
         controller.updateTotalReproductionLabel(reproductionCount);
@@ -142,7 +160,7 @@ public class Neuronet {
                     ++this.mutations;
                 }
             }
-                this.creatureList[numbers[0]] = new Creature(newSynapses);
+                this.creatureList[numbers[0]] = new Creature(this.game2048, newSynapses);
                 return numbers[0];
             }
 

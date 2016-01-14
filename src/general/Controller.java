@@ -42,10 +42,6 @@ public class Controller implements  ControlledScreen {
 
     @FXML
     void onClickGoButt(ActionEvent event) {
-
-
-
-
         //Show new screens
         myController.setScreen(Main.neuroNetScreenID);
         myController.unloadScreen(Main.mainScreenID);

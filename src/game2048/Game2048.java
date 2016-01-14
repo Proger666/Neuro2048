@@ -1,32 +1,13 @@
-/*
- * Copyright 1998-2014 Konstantin Bulenkov http://bulenkov.com/about
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package game2048;
 
 import javax.swing.*;
+import java.util.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
-/**
- * @author Konstantin Bulenkov
- */
+
 public class Game2048 extends JPanel {
   private static final Color BG_COLOR = new Color(0xbbada0);
   private static final String FONT_NAME = "Arial";
@@ -40,11 +21,42 @@ public class Game2048 extends JPanel {
 
   public Game2048() {
     setFocusable(true);
+    addKeyListener(new KeyAdapter() {
+      @Override
+      public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+          resetGame();
+        }
+        if (!canMove()) {
+          myLose = true;
+        }
+
+        if (!myWin && !myLose) {
+          switch (e.getKeyCode()) {
+            case KeyEvent.VK_LEFT:
+              left();
+              break;
+            case KeyEvent.VK_RIGHT:
+              right();
+              break;
+            case KeyEvent.VK_DOWN:
+              down();
+              break;
+            case KeyEvent.VK_UP:
+              up();
+              break;
+          }
+        }
+
+        if (!myWin && !canMove()) {
+          myLose = true;
+        }
+
+        repaint();
+      }
+    });
+    resetGame();
   }
-
-  public int getScore(){return myScore;}
-
-
 
   public void resetGame() {
     myScore = 0;
@@ -115,6 +127,7 @@ public class Game2048 extends JPanel {
     return list;
   }
 
+  public Tile[] getTiles(){ return myTiles; }
   private boolean isFull() {
     return availableSpace().size() == 0;
   }
@@ -127,7 +140,7 @@ public class Game2048 extends JPanel {
       for (int y = 0; y < 4; y++) {
         Tile t = tileAt(x, y);
         if ((x < 3 && t.value == tileAt(x + 1, y).value)
-          || ((y < 3) && t.value == tileAt(x, y + 1).value)) {
+                || ((y < 3) && t.value == tileAt(x, y + 1).value)) {
           return true;
         }
       }
@@ -293,7 +306,11 @@ public class Game2048 extends JPanel {
     return arg * (TILES_MARGIN + TILE_SIZE) + TILES_MARGIN;
   }
 
-  static class Tile {
+  public int getScore() {
+    return myScore;
+  }
+
+  public static class Tile {
     int value;
 
     public Tile() {
@@ -328,6 +345,8 @@ public class Game2048 extends JPanel {
       }
       return new Color(0xcdc1b4);
     }
+
+    public int getValue() { return value; }
   }
 
   public static void main(String[] args) {
